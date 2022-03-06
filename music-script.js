@@ -12,6 +12,7 @@ let melody = []
 let beat = []
 let counterpoint1 = []
 let counterpoint2 = []
+let countBeat = [] // faster beat to trigger visuals
 let totMeasure = 0
 let totQuarter = 0
 let totSixteenth = 0
@@ -79,13 +80,12 @@ function createMelody() {
 }
 
 function createBeat() {
-  let c = 0
   let measure = 0
   let quarters = 0
   let sixteenths = 0
   let countdown = 16*totMeasure + 4*totQuarter + totSixteenth
-  for (let i = countdown; i >= 0; i-=4) {
-    sixteenths += 4
+  for (let i = countdown; i >= 0; i--) {
+    sixteenths++
     if (sixteenths >= 4) {
       quarters += Math.floor(sixteenths/4)
       sixteenths = sixteenths % 4
@@ -95,10 +95,15 @@ function createBeat() {
       quarters = quarters % 4
     }
 
-    let instr = (c%4 == 2) ? 2 : 1;
-    beat.push({ time: `${measure}:${quarters}:${sixteenths}`, dur: "32n",
-      note: row[0]+"3", velocity: 0.5, instrument: instr})
-    c++
+    let instr = (quarters%4 == 2) ? 2 : 1;
+    countBeat.push({ time: `${measure}:${quarters}:${sixteenths}`, dur: "32n",
+      note: row[0]+"3", velocity: 0})
+    if (sixteenths == 0) {
+      beat.push({ time: `${measure}:${quarters}:${sixteenths}`, dur: "32n",
+        note: row[0]+"3", velocity: 0.5, instrument: instr})
+    }
+  }
+  for (let i=countdown; i>= 0; i--) {
   }
 }
 
@@ -107,27 +112,30 @@ function createCounterpoint() {
     let inter1 = notes[(notes.indexOf(item.rawnote) + intervals[Math.floor(Math.random() * intervals.length)])%12]
     let inter2 = notes[(notes.indexOf(item.rawnote) + intervals[Math.floor(Math.random() * intervals.length)])%12]
     counterpoint1.push({ time: item.time, dur: item.dur,
-      note: inter1+"5", velocity: 0.8})
+      note: inter1+"5", velocity: 0.8, rawnote: inter1})
     counterpoint2.push({ time: item.time, dur: item.dur,
-      note: inter2+"2", velocity: 0.8})
+      note: inter2+"2", velocity: 0.8, rawnote: inter2})
   });
 
 }
 
-function playRow() {
+function playMelody() {
   let melodyPart = new Tone.Part(function(time, value) {
+    melodyInd = notes.indexOf(value.rawnote)
     coolGuy.triggerAttackRelease(value.note, value.dur, time, value.velocity)}, melody).start(0)
   Tone.Transport.start(0)
 }
 
 function playCounterpoint1() {
   let counter1Part = new Tone.Part(function(time, value) {
+    counter1Ind = notes.indexOf(value.rawnote)
     electricCello.triggerAttackRelease(value.note, value.dur, time, value.velocity)}, counterpoint1).start(0)
   Tone.Transport.start(0)
 }
 
 function playCounterpoint2() {
   let counter2Part = new Tone.Part(function(time, value) {
+    counter2Ind = notes.indexOf(value.rawnote)
     mono.triggerAttackRelease(value.note, value.dur, time, value.velocity)}, counterpoint2).start(0)
   Tone.Transport.start(0)
 }
@@ -136,12 +144,22 @@ function playBeat() {
   let beatPart = new Tone.Part(function(time, value) {
     if (value.instrument == 2) {
       clave.triggerAttackRelease(value.note, value.dur, time, value.velocity)
-      // changeBgYellow()
+      setBgYellow()
     } else {
       conga.triggerAttackRelease(value.note, value.dur, time, value.velocity)
-      changeBg()
-      drawLight(w/2, w/2, "#f94144")
+      setBg()
     }
+  }, beat).start(0)
+  Tone.Transport.start(0)
+}
+
+function playCountBeat() {
+  let countBeatPart = new Tone.Part(function(time, value) {
+    // bell.triggerAttackRelease(value.note, value.dur, time, value.velocity)
+    drawBg(bgColor)
+    drawMelody(melodyInd)
+    drawCounter1(counter1Ind)
+    drawCounter2(counter2Ind)
   }, beat).start(0)
   Tone.Transport.start(0)
 }
@@ -155,10 +173,19 @@ function stopIt(){
 createMelody()
 createCounterpoint()
 createBeat()
+console.log(countBeat)
+
+const interval = setInterval(function() {
+  drawBg(bgColor)
+  drawMelody(melodyInd)
+  drawCounter1(counter1Ind)
+  drawCounter2(counter2Ind)
+}, 250)
 
 document.querySelector('canvas').addEventListener('click', async () => {
 	await Tone.start()
-  playRow()
+  // playCountBeat()
+  playMelody()
   playCounterpoint1()
   playCounterpoint2()
   playBeat()
