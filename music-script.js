@@ -142,7 +142,10 @@ function stopIt(){
 }
 
 ctx.font = "30px Georgia";
-ctx.fillText("Color Organ \n Click anywhere to start", w/2, h/2);
+ctx.fillText("Color Organ", w/2, h/2);
+ctx.font = "20px Georgia";
+ctx.fillText("click anywhere to start", w/2, h/2 + 40);
+
 createMelody()
 createCounterpoint()
 createBeat()
@@ -154,11 +157,12 @@ document.querySelector('canvas').addEventListener('click', async () => {
   playCounterpoint1()
   playCounterpoint2()
   playBeat()
-  const interval = setInterval(function() {
+
+  const interval = setInterval(function() { // draw every eighth second
     drawBg(bgColor)
-    drawMelody(melodyInd)
     drawCounter1(counter1Ind)
     drawCounter2(counter2Ind)
-  }, 250)
+    drawMelody(melodyInd)
+  }, 125)
 	console.log('audio is ready')
 })
