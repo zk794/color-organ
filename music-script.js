@@ -1,28 +1,4 @@
 
-let electricCello = new Tone.FMSynth({
-  "volume" : -18,
-  "harmonicity": 3.01,
-  "modulationIndex": 14,
-  "oscillator": {
-    "type": "triangle"
-  },
-  "envelope": {
-    "attack": 0.2,
-    "decay": 0.3,
-    "sustain": 0.4,
-    "release": 1.2
-  },
-  "modulation" : {
-    "type": "square"
-  },
-  "modulationEnvelope" : {
-    "attack": 0.01,
-    "decay": 0.5,
-    "sustain": 0.2,
-    "release": 0.1
-  }
-}).toDestination();
-
 
 const durations = [{dur:"1n", six:16}, {dur:"2n", six:8}, {dur:"4n", six:4}, {dur:"8n", six:2}, {dur:"16n", six:1}]
 const velocities = [0.9, 0.8, 0.7, 0.6]
@@ -32,6 +8,10 @@ const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 const reps = 2
 let melody = []
+let beat = []
+let totMeasure = 0
+let totQuarter = 0
+let totSixteenth = 0
 
 const synth = new Tone.MonoSynth({
 	oscillator: {
@@ -62,20 +42,19 @@ function retroRow(row) { // row backwards
   }
 }
 
-function createMelody() {
-  rowNotes = []
-  durs = []
-  vels = []
-  for (i=0; i<reps*12; i++) {
-    melody.push({ time: i, note: row[i%12], velocity: 0.9 })
-    // rowNotes.push(row[i]+"4")
-    // durs.push(Math.floor(Math.random() * durations.length))
-    // vels.push(Math.floor(Math.random() * velocities.length))
-  }
-}
+// function createMelody() {
+//   rowNotes = []
+//   durs = []
+//   vels = []
+//   for (i=0; i<reps*12; i++) {
+//     melody.push({ time: i, note: row[i%12], velocity: 0.9 })
+//     // rowNotes.push(row[i]+"4")
+//     // durs.push(Math.floor(Math.random() * durations.length))
+//     // vels.push(Math.floor(Math.random() * velocities.length))
+//   }
+// }
 
-function playRow() {
-  createMelody()
+function createMelody() {
   let measure = 0
   let quarters = 0
   let sixteenths = 0
@@ -94,25 +73,65 @@ function playRow() {
 
     melody.push({ time: `${measure}:${quarters}:${sixteenths}`, dur: d,
       note: row[i%12]+"4", velocity: 0.9})
-      //velocities[Math.floor(Math.random()*velocities.length])
   }
-  let melodyPart = new Tone.Part(function(time, value){
-    electricCello.triggerAttackRelease(value.note, value.dur, time, value.velocity)}, melody).start(0);
-  Tone.Transport.start(0);
-  Tone.Transport.stop(`${measure}:${quarters}:${sixteenths}`);
+  totMeasure = measure
+  totQuarter = quarters
+  totSixteenth = sixteenths
+}
+
+function createBeat() {
+  let c = 0
+  let measure = 0
+  let quarters = 0
+  let sixteenths = 0
+  let countdown = 16*totMeasure + 4*totQuarter + totSixteenth
+  for (let i = countdown; i >= 0; i-=4) {
+    sixteenths += 4
+    if (sixteenths >= 4) {
+      quarters += Math.floor(sixteenths/4)
+      sixteenths = sixteenths % 4
+    }
+    if (quarters >= 4) {
+      measure += Math.floor(quarters/4)
+      quarters = quarters % 4
+    }
+
+    let instr = (c%4 == 2) ? 2 : 1;
+    beat.push({ time: `${measure}:${quarters}:${sixteenths}`, dur: "32n",
+      note: row[0]+"3", velocity: 0.5, instrument: instr})
+    c++
+  }
+}
+
+function playRow() {
+  let melodyPart = new Tone.Part(function(time, value) {
+    coolGuy.triggerAttackRelease(value.note, value.dur, time, value.velocity)}, melody).start(0)
+  Tone.Transport.start(0)
+}
+
+function playBeat() {
+  let beatPart = new Tone.Part(function(time, value) {
+    if (value.instrument == 2) {
+      bell.triggerAttackRelease(value.note, value.dur, time, value.velocity)
+    } else {
+      conga.triggerAttackRelease(value.note, value.dur, time, value.velocity)
+    }
+  }, beat).start(0)
+  Tone.Transport.start(0)
 }
 
 function stopIt(){
-  Tone.Transport.stop();
-  Tone.Transport.cancel(0);
+  Tone.Transport.stop()
+  Tone.Transport.cancel(0)
 }
 
-// playRow()
-// console.log(row)
-// invertRow(row)
+createMelody()
+createBeat()
 
 document.querySelector('canvas').addEventListener('click', async () => {
 	await Tone.start()
   playRow()
+  playBeat()
 	console.log('audio is ready')
+  console.log(melody)
 })
