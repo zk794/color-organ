@@ -16,6 +16,7 @@ const w = canvas.width
 const h = canvas.height
 const ctx = canvas.getContext("2d")
 
+
 function setBg() {
   let newColor = colors[Math.floor(Math.random() * colors.length)]
   while (newColor == bgColor) {

@@ -7,12 +7,11 @@ const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 // let notesNew = [] // notes but starting from whatever the starting tone is
 const intervals = [0, 3, 4, 7, 8, 9]
 
-const reps = 2
+const reps = 10
 let melody = []
 let beat = []
 let counterpoint1 = []
 let counterpoint2 = []
-let countBeat = [] // faster beat to trigger visuals
 let totMeasure = 0
 let totQuarter = 0
 let totSixteenth = 0
@@ -39,20 +38,6 @@ function shuffle(array) {
 
   return array;
 }
-
-function retroRow(row) { // row backwards
-  for (let i = 1; i <= row.length; i++) {
-    retrRow.push(row[row.length-i])
-  }
-}
-
-// function createNotesNew() {
-//   let i = notes.indexOf(row[0])
-//   for (let j=0; j<12; j++) {
-//     notesNew.push(notes[(i+j)%12])
-//   }
-//   console.log(notesNew)
-// }
 
 function createMelody() {
   let measure = 0
@@ -96,8 +81,6 @@ function createBeat() {
     }
 
     let instr = (quarters%4 == 2) ? 2 : 1;
-    countBeat.push({ time: `${measure}:${quarters}:${sixteenths}`, dur: "32n",
-      note: row[0]+"3", velocity: 0})
     if (sixteenths == 0) {
       beat.push({ time: `${measure}:${quarters}:${sixteenths}`, dur: "32n",
         note: row[0]+"3", velocity: 0.5, instrument: instr})
@@ -153,41 +136,29 @@ function playBeat() {
   Tone.Transport.start(0)
 }
 
-function playCountBeat() {
-  let countBeatPart = new Tone.Part(function(time, value) {
-    // bell.triggerAttackRelease(value.note, value.dur, time, value.velocity)
-    drawBg(bgColor)
-    drawMelody(melodyInd)
-    drawCounter1(counter1Ind)
-    drawCounter2(counter2Ind)
-  }, beat).start(0)
-  Tone.Transport.start(0)
-}
-
 function stopIt(){
   Tone.Transport.stop()
   Tone.Transport.cancel(0)
 }
 
-// createNotesNew()
+ctx.font = "30px Georgia";
+ctx.fillText("Color Organ \n Click anywhere to start", w/2, h/2);
 createMelody()
 createCounterpoint()
 createBeat()
-console.log(countBeat)
 
-const interval = setInterval(function() {
-  drawBg(bgColor)
-  drawMelody(melodyInd)
-  drawCounter1(counter1Ind)
-  drawCounter2(counter2Ind)
-}, 250)
 
 document.querySelector('canvas').addEventListener('click', async () => {
 	await Tone.start()
-  // playCountBeat()
   playMelody()
   playCounterpoint1()
   playCounterpoint2()
   playBeat()
+  const interval = setInterval(function() {
+    drawBg(bgColor)
+    drawMelody(melodyInd)
+    drawCounter1(counter1Ind)
+    drawCounter2(counter2Ind)
+  }, 250)
 	console.log('audio is ready')
 })
