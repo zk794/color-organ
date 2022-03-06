@@ -23,6 +23,8 @@ const electricCello = new Tone.FMSynth({
   }
 }).toDestination();
 
+const mono = new Tone.MonoSynth({"volume": -18}).toDestination();
+
 // const dampConga = new Tone.Volume(-12).toDestination();
 
 const conga = new Tone.MembraneSynth({
@@ -40,7 +42,7 @@ const metronome = new Tone.MembraneSynth({
   "pitchDecay" : 0,
   "octaves" : 3,
   "envelope" : {
-    "attack" : 0.0006,
+    "attack" : 0.006,
     "decay" : 0.5,
     "sustain" : 0
   },
@@ -82,4 +84,14 @@ const bell = new Tone.MetalSynth({
     "decay" : 0.4,
   },
   "volume" : -25
+}).toDestination();
+
+const clave = new Tone.MetalSynth({
+  "harmonicity" : 2,
+  "resonance" : 8,
+  "modulationIndex" : 2,
+  "envelope" : {
+    "decay" : 0.09,
+  },
+  "volume" : -18
 }).toDestination();

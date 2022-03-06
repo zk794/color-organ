@@ -4,11 +4,14 @@ const durations = [{dur:"1n", six:16}, {dur:"2n", six:8}, {dur:"4n", six:4}, {du
 const velocities = [0.9, 0.8, 0.7, 0.6]
 let row = shuffle(["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]) // generate 12 tone row
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-// let retrRow = []
+// let notesNew = [] // notes but starting from whatever the starting tone is
+const intervals = [0, 3, 4, 7, 8, 9]
 
 const reps = 2
 let melody = []
 let beat = []
+let counterpoint1 = []
+let counterpoint2 = []
 let totMeasure = 0
 let totQuarter = 0
 let totSixteenth = 0
@@ -42,16 +45,12 @@ function retroRow(row) { // row backwards
   }
 }
 
-// function createMelody() {
-//   rowNotes = []
-//   durs = []
-//   vels = []
-//   for (i=0; i<reps*12; i++) {
-//     melody.push({ time: i, note: row[i%12], velocity: 0.9 })
-//     // rowNotes.push(row[i]+"4")
-//     // durs.push(Math.floor(Math.random() * durations.length))
-//     // vels.push(Math.floor(Math.random() * velocities.length))
+// function createNotesNew() {
+//   let i = notes.indexOf(row[0])
+//   for (let j=0; j<12; j++) {
+//     notesNew.push(notes[(i+j)%12])
 //   }
+//   console.log(notesNew)
 // }
 
 function createMelody() {
@@ -72,7 +71,7 @@ function createMelody() {
     }
 
     melody.push({ time: `${measure}:${quarters}:${sixteenths}`, dur: d,
-      note: row[i%12]+"4", velocity: 0.9})
+      note: row[i%12]+"4", velocity: 0.9, rawnote: row[i%12]})
   }
   totMeasure = measure
   totQuarter = quarters
@@ -103,18 +102,45 @@ function createBeat() {
   }
 }
 
+function createCounterpoint() {
+  melody.forEach(item => {
+    let inter1 = notes[(notes.indexOf(item.rawnote) + intervals[Math.floor(Math.random() * intervals.length)])%12]
+    let inter2 = notes[(notes.indexOf(item.rawnote) + intervals[Math.floor(Math.random() * intervals.length)])%12]
+    counterpoint1.push({ time: item.time, dur: item.dur,
+      note: inter1+"5", velocity: 0.8})
+    counterpoint2.push({ time: item.time, dur: item.dur,
+      note: inter2+"2", velocity: 0.8})
+  });
+
+}
+
 function playRow() {
   let melodyPart = new Tone.Part(function(time, value) {
     coolGuy.triggerAttackRelease(value.note, value.dur, time, value.velocity)}, melody).start(0)
   Tone.Transport.start(0)
 }
 
+function playCounterpoint1() {
+  let counter1Part = new Tone.Part(function(time, value) {
+    electricCello.triggerAttackRelease(value.note, value.dur, time, value.velocity)}, counterpoint1).start(0)
+  Tone.Transport.start(0)
+}
+
+function playCounterpoint2() {
+  let counter2Part = new Tone.Part(function(time, value) {
+    mono.triggerAttackRelease(value.note, value.dur, time, value.velocity)}, counterpoint2).start(0)
+  Tone.Transport.start(0)
+}
+
 function playBeat() {
   let beatPart = new Tone.Part(function(time, value) {
     if (value.instrument == 2) {
-      bell.triggerAttackRelease(value.note, value.dur, time, value.velocity)
+      clave.triggerAttackRelease(value.note, value.dur, time, value.velocity)
+      // changeBgYellow()
     } else {
       conga.triggerAttackRelease(value.note, value.dur, time, value.velocity)
+      changeBg()
+      drawLight(w/2, w/2, "#f94144")
     }
   }, beat).start(0)
   Tone.Transport.start(0)
@@ -125,13 +151,16 @@ function stopIt(){
   Tone.Transport.cancel(0)
 }
 
+// createNotesNew()
 createMelody()
+createCounterpoint()
 createBeat()
 
 document.querySelector('canvas').addEventListener('click', async () => {
 	await Tone.start()
   playRow()
+  playCounterpoint1()
+  playCounterpoint2()
   playBeat()
 	console.log('audio is ready')
-  console.log(melody)
 })
