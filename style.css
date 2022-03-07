@@ -1,3 +1,7 @@
 canvas {
   background-color: "green";
 }
+
+body {
+  margin: 0;
+}
